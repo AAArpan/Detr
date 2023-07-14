@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 import torchvision
 from torch import nn
-from torchvision.models._utils import IntermediateLayerGetter
+from torch_intermediate_layer_getter import IntermediateLayerGetter
 from typing import Dict, List
 from wavemix import Level4Waveblock, Level3Waveblock, Level2Waveblock, Level1Waveblock
 import torch.nn as nn
@@ -40,7 +40,7 @@ class BackboneBase(nn.Module):
         self.num_channels = num_channels
 
     def forward(self, tensor_list):
-        xs = self.body(tensor_list.tensors)
+        xs, mod = self.body(tensor_list.tensors)
         out = OrderedDict()
         for name, x in xs.items():
             m = tensor_list.mask
