@@ -55,7 +55,7 @@ class Backbone(BackboneBase):
                  return_interm_layers: bool):
         backbone = transformer_model
         num_channels = 512  
-        super().__init__(backbone, train_backbone=False, num_channels=192, return_interm_layers=False)
+        super().__init__(backbone, train_backbone=False, num_channels=2048, return_interm_layers=False)
 
 class Joiner(nn.Sequential):
     def __init__(self, backbone, position_embedding):
@@ -89,7 +89,7 @@ def build_backbone(args):
         patch_size=4,
         stride=2
     ).cuda()
-    backbone = Backbone(model,192).cuda()
+    backbone = Backbone(model, 2048).cuda()
     state_dict = torch.hub.load_state_dict_from_url('https://huggingface.co/cloudwalker/wavemix/resolve/main/Saved_Models_Weights/ImageNet/imagenet_71.49.pth')
     backbone.load_state_dict(state_dict, strict=False)
     model = Joiner(backbone, position_embedding)
@@ -147,17 +147,17 @@ class WaveMix(nn.Module):
             )
         
     def forward(self, img):
+        print(img.shape)
         x = self.conv(img)   
             
         for attn in self.layers:
             x = attn(x) + x
-        print(x.shape)
+        # print(x.shape, "hi")
         out = self.pool(x)
-        print(out.shape)
+        # print(out.shape)
         return out
 
 # arr = torch.rand(1,3,224,224).cuda()
 # pred = transformer_model.cuda()(arr)
 # state_dict = torch.hub.load_state_dict_from_url('LOCAL_PATH')
 # backbone.load_state_dict(state_dict)
-
