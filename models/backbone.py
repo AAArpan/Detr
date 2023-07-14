@@ -88,8 +88,8 @@ def build_backbone(args):
         initial_conv='pachify',
         patch_size=4,
         stride=2
-    )
-    backbone = Backbone(model, train_backbone, 192, return_interm_layers)  
+    ).cuda()
+    backbone = Backbone(model, train_backbone, 192, return_interm_layers).cuda()
     state_dict = torch.hub.load_state_dict_from_url('https://huggingface.co/cloudwalker/wavemix/resolve/main/Saved_Models_Weights/ImageNet/imagenet_71.49.pth')
     backbone.load_state_dict(state_dict, strict=False)
     model = Joiner(backbone, position_embedding)
