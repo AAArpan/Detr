@@ -85,6 +85,8 @@ def resize(image, target, size, max_size=None):
                 size = int(round(max_size * min_original_size / max_original_size))
 
         if (w <= h and w == size) or (h <= w and h == size):
+            h = int(h/32)*h
+            w = int(h/32)*w
             return (h, w)
 
         if w < h:
@@ -94,7 +96,7 @@ def resize(image, target, size, max_size=None):
             oh = size
             ow = int(size * w / h)
 
-        return (oh, ow)
+        return ((oh//32)*32, (ow//32)*32)
 
     def get_size(image_size, size, max_size=None):
         if isinstance(size, (list, tuple)):
@@ -102,38 +104,34 @@ def resize(image, target, size, max_size=None):
         else:
             return get_size_with_aspect_ratio(image_size, size, max_size)
 
-    def resize_to_multiple_of_32(image, target, size):
-        w, h = image.size
-        aspect_ratio = float(w) / float(h)
-        new_w = (size[0] // 32) * 32
-        new_h = int(new_w / aspect_ratio)
-        new_h = (new_h // 32) * 32
-        resized_image = F.resize(image, (new_w, new_h))
-
-        # Adjust target coordinates accordingly
-        if target is not None and "boxes" in target:
-            boxes = target["boxes"]
-            scale_x = new_w / w
-            scale_y = new_h / h
-            target["boxes"] = boxes * torch.tensor([scale_x, scale_y, scale_x, scale_y])
-
-        return resized_image, target
-
     size = get_size(image.size, size, max_size)
-    rescaled_image, rescaled_target = resize_to_multiple_of_32(image, target, size)
+    rescaled_image = F.resize(image, size)
 
-    if rescaled_target is None:
+    if target is None:
         return rescaled_image, None
 
-    # Update target with resized image properties
-    h, w = size
-    rescaled_target["size"] = torch.tensor([h, w])
+    ratios = tuple(float(s) / float(s_orig) for s, s_orig in zip(rescaled_image.size, image.size))
+    ratio_width, ratio_height = ratios
 
-    if "masks" in rescaled_target:
-        rescaled_target['masks'] = interpolate(
-            rescaled_target['masks'][:, None].float(), size, mode="nearest")[:, 0] > 0.5
-    target = rescaled_target
-    return rescaled_image, rescaled_target
+    target = target.copy()
+    if "boxes" in target:
+        boxes = target["boxes"]
+        scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
+        target["boxes"] = scaled_boxes
+
+    if "area" in target:
+        area = target["area"]
+        scaled_area = area * (ratio_width * ratio_height)
+        target["area"] = scaled_area
+
+    h, w = size
+    target["size"] = torch.tensor([h, w])
+
+    if "masks" in target:
+        target['masks'] = interpolate(
+            target['masks'][:, None].float(), size, mode="nearest")[:, 0] > 0.5
+
+    return rescaled_image, target
 
 
 def pad(image, target, padding):
