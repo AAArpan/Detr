@@ -147,7 +147,7 @@ class WaveMix(nn.Module):
             )
         
     def forward(self, img):
-        print(img.shape)
+        # print(img.shape)
         x = self.conv(img)   
             
         for attn in self.layers:
