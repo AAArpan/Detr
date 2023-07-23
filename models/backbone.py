@@ -41,7 +41,7 @@ class BackboneBase(nn.Module):
 
     def forward(self, tensor_list):
         xs, mod = self.body(tensor_list.tensors)
-        out = OrderedDict()
+        out: Dict[str, NestedTensor] = {}
         for name, x in xs.items():
             m = tensor_list.mask
             assert m is not None
