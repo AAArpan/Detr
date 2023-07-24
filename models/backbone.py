@@ -36,9 +36,9 @@ class BackboneBase(nn.Module):
         if return_interm_layers:
             return_layers = {"layer1": "0", "layer2": "1", "layer3": "2", "layer4": "3"}
         else:
-            return_layers = {"pool":"3"}
+            return_layers = {"XXX":"3"}
             for name, parameter in backbone.named_parameters():
-                if "pool" in name:
+                if "XXX" in name:
                   parameter.requires_grad_(True)
 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
@@ -132,7 +132,7 @@ class WaveMix(nn.Module):
                 else:
                     self.layers.append(Level1Waveblock(mult = mult, ff_channel = ff_channel, final_dim = final_dim, dropout = dropout))
         
-        self.pool = nn.Sequential(
+        self.XXX = nn.Sequential(
             nn.Conv2d(192, 256, kernel_size=3, stride=1, padding=1),
             nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(512, 1024, kernel_size=3, stride=2, padding=1),
@@ -160,7 +160,7 @@ class WaveMix(nn.Module):
         for attn in self.layers:
             x = attn(x) + x
         # print(x.shape, "hi")
-        out = self.pool(x)
+        out = self.XXX(x)
         # print(out.shape)
         return out
 
