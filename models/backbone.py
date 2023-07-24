@@ -38,7 +38,9 @@ class BackboneBase(nn.Module):
         else:
             return_layers = {"pool":"3"}
             for name, parameter in backbone.named_parameters():
-                if name 
+                if "pool" in name:
+                  parameter.requires_grad_(True)
+
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
         self.num_channels = num_channels
 
