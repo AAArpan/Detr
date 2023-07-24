@@ -29,13 +29,16 @@ class FrozenBatchNorm2d(torch.nn.Module):
 class BackboneBase(nn.Module):
     def __init__(self, backbone: nn.Module, train_backbone: bool, num_channels: int, return_interm_layers: bool):
         super().__init__()
+
         for name, parameter in backbone.named_parameters():
             if not train_backbone:
                 parameter.requires_grad_(False)
         if return_interm_layers:
             return_layers = {"layer1": "0", "layer2": "1", "layer3": "2", "layer4": "3"}
         else:
-            return_layers = {"pool":"0"}
+            return_layers = {"pool":"3"}
+            for name, parameter in backbone.named_parameters():
+                if name 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
         self.num_channels = num_channels
 
@@ -54,7 +57,9 @@ class Backbone(BackboneBase):
     def __init__(self, transformer_model: nn.Module,
                  return_interm_layers: bool):
         backbone = transformer_model
-        num_channels = 512  
+        state_dict = torch.hub.load_state_dict_from_url('https://huggingface.co/cloudwalker/wavemix/resolve/main/Saved_Models_Weights/ImageNet/imagenet_71.49.pth')
+        backbone.load_state_dict(state_dict, strict=False)
+        num_channels = 2048 
         super().__init__(backbone, train_backbone=False, num_channels=2048, return_interm_layers=False)
 
 class Joiner(nn.Sequential):
@@ -90,8 +95,8 @@ def build_backbone(args):
         stride=2
     ).cuda()
     backbone = Backbone(model, 2048).cuda()
-    state_dict = torch.hub.load_state_dict_from_url('https://huggingface.co/cloudwalker/wavemix/resolve/main/Saved_Models_Weights/ImageNet/imagenet_71.49.pth')
-    backbone.load_state_dict(state_dict, strict=False)
+    # state_dict = torch.hub.load_state_dict_from_url('https://huggingface.co/cloudwalker/wavemix/resolve/main/Saved_Models_Weights/ImageNet/imagenet_71.49.pth')
+    # backbone.load_state_dict(state_dict, strict=False)
     model = Joiner(backbone, position_embedding)
     model.num_channels = backbone.num_channels
     return model
